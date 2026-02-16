@@ -491,14 +491,7 @@ Context = [<span class="highlight">1, 2, 3</span>] + [<span class="highlight">re
 <!-- ═══════════════════════════════════════════ EXPERIMENT 1 ══ -->
 <section id="experiment1">
     <h2 class="section-title">Experiment 1: Network Performance vs Traffic Load</h2>
-    <p class="section-subtitle">4 SF/Mesh configurations tested across 9 traffic levels (4–48 packets/min)</p>
-
-    <div class="stat-row">
-        <div class="stat"><div class="num">4</div><div class="label">End Devices</div></div>
-        <div class="stat"><div class="num">32</div><div class="label">Sessions Run</div></div>
-        <div class="stat"><div class="num">5 min</div><div class="label">Per Session</div></div>
-        <div class="stat"><div class="num">EU868</div><div class="label">Region</div></div>
-    </div>
+    <p class="section-subtitle">4 SF/Mesh configurations tested across multiple traffic levels</p>
 
     <div class="table-wrap">
         <table>
@@ -544,30 +537,10 @@ Context = [<span class="highlight">1, 2, 3</span>] + [<span class="highlight">re
 <!-- ═══════════════════════════════════════════ EXPERIMENT 2 ══ -->
 <section id="experiment2">
     <h2 class="section-title">Experiment 2: 4-Node Uplink, Downlink &amp; Duty Cycle</h2>
-    <p class="section-subtitle">SF7 end devices with SF7 / SF9 / SF12 mesh backhaul — 2 to 15 PPM per node</p>
-
-    <div class="stat-row">
-        <div class="stat"><div class="num">4</div><div class="label">SF7 End Devices</div></div>
-        <div class="stat"><div class="num">3</div><div class="label">Mesh SF Configs</div></div>
-        <div class="stat"><div class="num">25</div><div class="label">Sessions Run</div></div>
-        <div class="stat"><div class="num">300s</div><div class="label">Per Session</div></div>
-    </div>
+    <p class="section-subtitle">SF7 end devices with SF7 / SF9 / SF12 mesh backhaul at varying packet rates</p>
 
     <h3 style="margin:1.5rem 0 .75rem;">Relay Gateway PDR vs Packet Rate</h3>
-    <div class="table-wrap">
-        <table>
-            <thead><tr><th>PPM</th><th>SF7 Mesh</th><th>SF9 Mesh</th><th>SF12 Mesh</th></tr></thead>
-            <tbody>
-                <tr><td>2</td><td class="ok">100.0%</td><td>97.5%</td><td class="ok">100.0%</td></tr>
-                <tr><td>4</td><td>93.8%</td><td class="ok">100.0%</td><td>57.5%</td></tr>
-                <tr><td>6</td><td>83.3%</td><td>86.7%</td><td>55.0%</td></tr>
-                <tr><td>8</td><td>75.6%</td><td>63.7%</td><td>51.2%</td></tr>
-                <tr><td>10</td><td>77.0%</td><td>74.5%</td><td class="bad">30.5%</td></tr>
-                <tr><td>12</td><td>66.2%</td><td>65.0%</td><td class="bad">31.7%</td></tr>
-                <tr><td>15</td><td>60.3%</td><td>63.7%</td><td class="bad">30.3%</td></tr>
-            </tbody>
-        </table>
-    </div>
+    <p style="font-size:.9rem;color:var(--text-muted);margin-bottom:1rem;">Performance analysis across different spreading factors reveals significant degradation patterns at higher traffic loads, particularly with SF12 mesh configuration.</p>
 
     <figure class="fig">
         <img src="images/combined_relay_pdr.png" alt="Combined relay PDR comparison" loading="lazy">
@@ -575,20 +548,7 @@ Context = [<span class="highlight">1, 2, 3</span>] + [<span class="highlight">re
     </figure>
 
     <h3 style="margin:1.5rem 0 .75rem;">Border Gateway PDR vs Packet Rate</h3>
-    <div class="table-wrap">
-        <table>
-            <thead><tr><th>PPM</th><th>SF7 Mesh</th><th>SF9 Mesh</th><th>SF12 Mesh</th></tr></thead>
-            <tbody>
-                <tr><td>2</td><td>97.5%</td><td class="ok">100.0%</td><td>95.0%</td></tr>
-                <tr><td>4</td><td>91.2%</td><td>98.8%</td><td class="bad">38.8%</td></tr>
-                <tr><td>6</td><td>82.5%</td><td>70.8%</td><td class="bad">25.8%</td></tr>
-                <tr><td>8</td><td>65.0%</td><td>55.6%</td><td class="bad">25.6%</td></tr>
-                <tr><td>10</td><td>71.0%</td><td>69.5%</td><td class="bad">24.0%</td></tr>
-                <tr><td>12</td><td>51.2%</td><td>53.3%</td><td class="bad">22.9%</td></tr>
-                <tr><td>15</td><td>53.0%</td><td>47.3%</td><td class="bad">14.0%</td></tr>
-            </tbody>
-        </table>
-    </div>
+    <p style="font-size:.9rem;color:var(--text-muted);margin-bottom:1rem;">Border PDR measurements show correlation with duty cycle consumption, with SF12 configurations exhibiting severe degradation beyond moderate traffic levels.</p>
 
     <figure class="fig">
         <img src="images/combined_border_pdr.png" alt="Combined border PDR comparison" loading="lazy">
@@ -596,21 +556,7 @@ Context = [<span class="highlight">1, 2, 3</span>] + [<span class="highlight">re
     </figure>
 
     <h3 style="margin:1.5rem 0 .75rem;">M-band Duty Cycle Budget Utilisation</h3>
-    <p style="margin-bottom:1rem;color:var(--text-muted);font-size:.9rem;">EU868 M-band: 1% duty cycle = 36 seconds of airtime per hour. Values &gt;100% violate regulations.</p>
-    <div class="table-wrap">
-        <table>
-            <thead><tr><th>PPM</th><th>SF7 Mesh</th><th>SF9 Mesh</th><th>SF12 Mesh</th></tr></thead>
-            <tbody>
-                <tr><td>2</td><td class="ok">20.6%</td><td class="ok">31.0%</td><td class="bad">252.1%</td></tr>
-                <tr><td>4</td><td class="ok">36.6%</td><td class="warn">67.6%</td><td class="bad">262.7%</td></tr>
-                <tr><td>6</td><td class="warn">59.1%</td><td class="warn">90.6%</td><td class="bad">371.1%</td></tr>
-                <tr><td>8</td><td class="warn">70.9%</td><td class="warn">83.8%</td><td class="bad">454.4%</td></tr>
-                <tr><td>10</td><td class="warn">74.8%</td><td class="bad">125.7%</td><td class="bad">314.3%</td></tr>
-                <tr><td>12</td><td class="warn">57.8%</td><td class="bad">108.1%</td><td class="bad">421.7%</td></tr>
-                <tr><td>15</td><td class="warn">82.8%</td><td class="bad">156.3%</td><td class="bad">522.2%</td></tr>
-            </tbody>
-        </table>
-    </div>
+    <p style="margin-bottom:1rem;color:var(--text-muted);font-size:.9rem;">EU868 M-band has a 1% duty cycle limit (36 seconds/hour). Our analysis reveals severe violations with SF9 and SF12 configurations, while SF7 remains compliant across all tested rates.</p>
 
     <figure class="fig">
         <img src="images/combined_duty_cycle.png" alt="Combined duty cycle comparison" loading="lazy">
@@ -618,20 +564,7 @@ Context = [<span class="highlight">1, 2, 3</span>] + [<span class="highlight">re
     </figure>
 
     <h3 style="margin:1.5rem 0 .75rem;">Downlink Delivery Success Rate</h3>
-    <div class="table-wrap">
-        <table>
-            <thead><tr><th>PPM</th><th>SF7 Mesh</th><th>SF9 Mesh</th><th>SF12 Mesh</th></tr></thead>
-            <tbody>
-                <tr><td>2</td><td class="ok">100.0%</td><td class="ok">100.0%</td><td class="ok">100.0%</td></tr>
-                <tr><td>4</td><td>93.8%</td><td class="ok">100.0%</td><td class="warn">45.0%</td></tr>
-                <tr><td>6</td><td>88.3%</td><td>85.8%</td><td class="bad">29.2%</td></tr>
-                <tr><td>8</td><td>74.4%</td><td>63.1%</td><td class="bad">28.1%</td></tr>
-                <tr><td>10</td><td>83.0%</td><td>80.0%</td><td class="bad">25.5%</td></tr>
-                <tr><td>12</td><td>57.1%</td><td>55.4%</td><td class="bad">26.2%</td></tr>
-                <tr><td>15</td><td>55.7%</td><td>47.0%</td><td class="bad">15.3%</td></tr>
-            </tbody>
-        </table>
-    </div>
+    <p style="font-size:.9rem;color:var(--text-muted);margin-bottom:1rem;">Downlink delivery correlates closely with uplink PDR patterns, with SF12 showing critical failure rates (dropping to 15%) at higher traffic loads.</p>
 
     <figure class="fig">
         <img src="images/combined_downlink_delivery.png" alt="Combined downlink delivery comparison" loading="lazy">
@@ -709,14 +642,7 @@ Context = [<span class="highlight">1, 2, 3</span>] + [<span class="highlight">re
 <!-- ═══════════════════════════════════════════ TIMING ══ -->
 <section id="timing">
     <h2 class="section-title">Relay Timing Analysis</h2>
-    <p class="section-subtitle">Mesh hop delay between relay and border gateway receptions (46 matched packets)</p>
-
-    <div class="stat-row">
-        <div class="stat"><div class="num">1352 ms</div><div class="label">Mean Hop Delay</div></div>
-        <div class="stat"><div class="num">464 ms</div><div class="label">Median Hop Delay</div></div>
-        <div class="stat"><div class="num">18 ms</div><div class="label">Minimum Delay</div></div>
-        <div class="stat"><div class="num">9011 ms</div><div class="label">Maximum Delay</div></div>
-    </div>
+    <p class="section-subtitle">Mesh hop delay between relay and border gateway receptions</p>
 
     <div class="finding warning">
         <strong>High variance (σ = 2066 ms)</strong> suggests occasional queuing or retransmission effects at the relay.
