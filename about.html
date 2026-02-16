@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About — Thevindu Kalubowila</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #0f1117;
+            --surface: #181b23;
+            --surface2: #1e222d;
+            --border: #2a2f3e;
+            --text: #e4e6ed;
+            --text-muted: #9ba1b0;
+            --accent: #6c8cff;
+            --accent-dim: #4a63c7;
+            --green: #4ade80;
+            --red: #f87171;
+            --yellow: #fbbf24;
+            --max-w: 900px;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            font-size: 16px;
+            min-height: 100vh;
+        }
+
+        /* ── NAV ── */
+        nav {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(15,17,23,.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+        .nav-inner {
+            max-width: var(--max-w); margin: 0 auto;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: .75rem 1.5rem;
+        }
+        .nav-brand { font-weight: 700; font-size: 1.1rem; color: var(--accent); text-decoration: none; }
+        .nav-back {
+            color: var(--text-muted); text-decoration: none; font-size: .88rem;
+            display: flex; align-items: center; gap: .4rem; transition: color .2s;
+        }
+        .nav-back:hover { color: var(--accent); }
+
+        /* ── HERO ── */
+        .about-hero {
+            text-align: center;
+            padding: 4rem 1.5rem 2rem;
+            background: linear-gradient(180deg, #151825 0%, var(--bg) 100%);
+        }
+        .avatar {
+            width: 110px; height: 110px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), #a78bfa);
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 1.25rem;
+            font-size: 2.6rem; font-weight: 800; color: #fff;
+            box-shadow: 0 0 0 4px var(--bg), 0 0 0 6px var(--accent-dim);
+        }
+        .about-hero h1 { font-size: 2rem; font-weight: 800; margin-bottom: .25rem; }
+        .about-hero .role { color: var(--accent); font-size: 1.05rem; margin-bottom: .25rem; }
+        .about-hero .uni  { color: var(--text-muted); font-size: .95rem; margin-bottom: 1.5rem; }
+
+        /* ── SOCIAL BAR ── */
+        .social-bar {
+            display: flex; justify-content: center; gap: .75rem; flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+        .social-btn {
+            display: inline-flex; align-items: center; gap: .45rem;
+            padding: .55rem 1.1rem; border-radius: 999px;
+            background: var(--surface); border: 1px solid var(--border);
+            color: var(--text-muted); text-decoration: none; font-size: .85rem;
+            transition: all .25s;
+        }
+        .social-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+        .social-btn svg { flex-shrink: 0; }
+
+        /* ── MAIN ── */
+        .content { max-width: var(--max-w); margin: 0 auto; padding: 0 1.5rem 3rem; }
+
+        .section-label {
+            font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em;
+            color: var(--accent); margin-bottom: .5rem;
+        }
+        .section-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 1rem; }
+
+        .bio-block {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+            padding: 1.75rem; margin-bottom: 2rem;
+        }
+        .bio-block p { color: var(--text-muted); font-size: .95rem; margin-bottom: .75rem; }
+        .bio-block p:last-child { margin-bottom: 0; }
+
+        /* interests */
+        .interests {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem; margin-bottom: 2rem;
+        }
+        .interest-card {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+            padding: 1.25rem; transition: border-color .25s;
+        }
+        .interest-card:hover { border-color: var(--accent-dim); }
+        .interest-card .icon { font-size: 1.4rem; margin-bottom: .5rem; }
+        .interest-card h3 { font-size: .92rem; margin-bottom: .25rem; }
+        .interest-card p  { font-size: .82rem; color: var(--text-muted); }
+
+        /* tech stack */
+        .stack-section { margin-bottom: 2rem; }
+        .stack-group { margin-bottom: 1.25rem; }
+        .stack-group-label { font-size: .78rem; font-weight: 600; color: var(--text-muted); margin-bottom: .5rem; text-transform: uppercase; letter-spacing: .06em; }
+        .badge-wrap { display: flex; flex-wrap: wrap; gap: .4rem; }
+        .badge {
+            background: var(--surface2); border: 1px solid var(--border);
+            padding: .3rem .75rem; border-radius: 999px; font-size: .78rem; color: var(--text-muted);
+            transition: border-color .2s, color .2s;
+        }
+        .badge:hover { border-color: var(--accent-dim); color: var(--text); }
+
+        /* github stats */
+        .gh-stats {
+            display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;
+            margin-bottom: 2rem;
+        }
+        .gh-stats img { border-radius: 8px; max-width: 100%; height: auto; }
+
+        /* divider */
+        .divider { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
+
+        /* ── FOOTER ── */
+        footer {
+            border-top: 1px solid var(--border);
+            text-align: center; padding: 2rem 1.5rem; color: var(--text-muted);
+            font-size: .82rem;
+        }
+        footer a { color: var(--accent); text-decoration: none; }
+
+        @media (max-width: 600px) {
+            .about-hero h1 { font-size: 1.5rem; }
+            .interests { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+    <div class="nav-inner">
+        <a class="nav-brand" href="index.html">ChirpStack Mesh Analysis</a>
+        <a class="nav-back" href="index.html">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            Back to Research
+        </a>
+    </div>
+</nav>
+
+<!-- HERO -->
+<header class="about-hero">
+    <div class="avatar">TK</div>
+    <h1>Thevindu Kalubowila</h1>
+    <p class="role">Electronics &amp; Telecommunication Engineering</p>
+    <p class="uni">University of Moratuwa &bull; 3rd Year Undergraduate</p>
+
+    <!-- Social buttons -->
+    <div class="social-bar">
+        <a href="mailto:thevindukalubowila123@gmail.com" class="social-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            Gmail
+        </a>
+        <a href="mailto:thevindu.kalubowila@kaust.edu.sa" class="social-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            KAUST Email
+        </a>
+        <a href="https://www.linkedin.com/in/thevindu-kalubowila/" target="_blank" class="social-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            LinkedIn
+        </a>
+        <a href="https://github.com/ThevinduSK" target="_blank" class="social-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+            GitHub
+        </a>
+    </div>
+</header>
+
+<!-- MAIN CONTENT -->
+<main class="content">
+
+    <!-- Bio -->
+    <div class="section-label">About</div>
+    <div class="bio-block">
+        <p>
+            I'm a 3rd-year Electronics &amp; Telecommunication Engineering undergraduate at the University of Moratuwa, Sri Lanka.
+            I'm passionate about telecommunication protocols, network architecture, and system design.
+        </p>
+        <p>
+            This research project — a comprehensive evaluation of the <strong>ChirpStack Gateway Mesh</strong> protocol — involved
+            reverse-engineering the Rust-based mesh firmware, building a full-stack Python measurement framework,
+            and conducting extensive experiments to characterise performance, duty cycle behaviour, and protocol limitations
+            across multiple spreading factor configurations.
+        </p>
+    </div>
+
+    <!-- Research Interests -->
+    <div class="section-label">Research Interests</div>
+    <div class="interests">
+        <div class="interest-card">
+            <div class="icon">&#x1F4E1;</div>
+            <h3>Wireless Communications</h3>
+            <p>LoRaWAN, mesh networking, physical layer protocols, RF system design</p>
+        </div>
+        <div class="interest-card">
+            <div class="icon">&#x1F310;</div>
+            <h3>Network Architecture</h3>
+            <p>Routing protocols (OSPF, RIP, Distance Vector), protocol analysis and optimisation</p>
+        </div>
+        <div class="interest-card">
+            <div class="icon">&#x1F4DF;</div>
+            <h3>IoT Systems</h3>
+            <p>Gateway architectures, MQTT, sensor networks, edge computing</p>
+        </div>
+        <div class="interest-card">
+            <div class="icon">&#x1F916;</div>
+            <h3>Embedded &amp; Robotics</h3>
+            <p>Raspberry Pi, Arduino, ROS, real-time systems, firmware development</p>
+        </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Tech Stack -->
+    <div class="section-label">Tech Stack</div>
+    <h2 class="section-title">Tools &amp; Technologies</h2>
+
+    <div class="stack-section">
+        <div class="stack-group">
+            <div class="stack-group-label">Languages</div>
+            <div class="badge-wrap">
+                <span class="badge">C</span>
+                <span class="badge">C++</span>
+                <span class="badge">Python</span>
+                <span class="badge">Rust</span>
+                <span class="badge">R</span>
+            </div>
+        </div>
+
+        <div class="stack-group">
+            <div class="stack-group-label">Web &amp; Backend</div>
+            <div class="badge-wrap">
+                <span class="badge">FastAPI</span>
+                <span class="badge">Django</span>
+                <span class="badge">Flask</span>
+                <span class="badge">Node.js</span>
+                <span class="badge">React</span>
+                <span class="badge">.NET</span>
+            </div>
+        </div>
+
+        <div class="stack-group">
+            <div class="stack-group-label">ML &amp; Data Science</div>
+            <div class="badge-wrap">
+                <span class="badge">TensorFlow</span>
+                <span class="badge">PyTorch</span>
+                <span class="badge">Keras</span>
+                <span class="badge">scikit-learn</span>
+                <span class="badge">OpenCV</span>
+                <span class="badge">NumPy</span>
+                <span class="badge">Pandas</span>
+                <span class="badge">Matplotlib</span>
+                <span class="badge">SciPy</span>
+            </div>
+        </div>
+
+        <div class="stack-group">
+            <div class="stack-group-label">Databases &amp; Messaging</div>
+            <div class="badge-wrap">
+                <span class="badge">PostgreSQL</span>
+                <span class="badge">MySQL</span>
+                <span class="badge">Redis</span>
+                <span class="badge">Apache Kafka</span>
+            </div>
+        </div>
+
+        <div class="stack-group">
+            <div class="stack-group-label">Robotics &amp; IoT</div>
+            <div class="badge-wrap">
+                <span class="badge">ROS</span>
+                <span class="badge">Raspberry Pi</span>
+                <span class="badge">Mosquitto</span>
+                <span class="badge">Node-RED</span>
+            </div>
+        </div>
+
+        <div class="stack-group">
+            <div class="stack-group-label">Tools &amp; Platforms</div>
+            <div class="badge-wrap">
+                <span class="badge">Google Cloud</span>
+                <span class="badge">NVIDIA CUDA</span>
+                <span class="badge">Cisco</span>
+                <span class="badge">LaTeX</span>
+                <span class="badge">Markdown</span>
+            </div>
+        </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- GitHub Stats -->
+    <div class="section-label">GitHub</div>
+    <h2 class="section-title">Activity &amp; Stats</h2>
+    <div class="gh-stats">
+        <img src="https://github-readme-stats.vercel.app/api?username=ThevinduSK&theme=tokyonight&hide_border=true&include_all_commits=true&count_private=true&bg_color=181b23" alt="GitHub Stats" height="165" loading="lazy">
+        <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=ThevinduSK&theme=tokyonight&hide_border=true&layout=compact&bg_color=181b23" alt="Top Languages" height="165" loading="lazy">
+    </div>
+    <div class="gh-stats">
+        <img src="https://nirzak-streak-stats.vercel.app/?user=ThevinduSK&theme=tokyonight&hide_border=true&background=181b23" alt="GitHub Streak" loading="lazy">
+    </div>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+    <p>
+        Thevindu Kalubowila &middot;
+        <a href="https://www.linkedin.com/in/thevindu-kalubowila/" target="_blank">LinkedIn</a> &middot;
+        <a href="https://github.com/ThevinduSK" target="_blank">GitHub</a> &middot;
+        <a href="mailto:thevindukalubowila123@gmail.com">Email</a>
+        <br>
+        <a href="index.html" style="color:var(--text-muted);">&larr; Back to ChirpStack Mesh Analysis</a>
+    </p>
+</footer>
+
+</body>
+</html>
