@@ -3,36 +3,841 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChirpStack Mesh Analysis</title>
+    <title>ChirpStack Gateway Mesh — Performance Evaluation &amp; Protocol Analysis</title>
     <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #0f1117;
+            --surface: #181b23;
+            --surface2: #1e222d;
+            --border: #2a2f3e;
+            --text: #e4e6ed;
+            --text-muted: #9ba1b0;
+            --accent: #6c8cff;
+            --accent-dim: #4a63c7;
+            --green: #4ade80;
+            --red: #f87171;
+            --yellow: #fbbf24;
+            --orange: #fb923c;
+            --max-w: 1100px;
+        }
+
+        html { scroll-behavior: smooth; }
+
         body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            font-size: 16px;
         }
-        .container {
+
+        /* ── NAV ── */
+        nav {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(15,17,23,.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+        .nav-inner {
+            max-width: var(--max-w); margin: 0 auto;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: .75rem 1.5rem;
+        }
+        .nav-brand { font-weight: 700; font-size: 1.1rem; color: var(--accent); text-decoration: none; }
+        .nav-links { display: flex; gap: 1.5rem; list-style: none; flex-wrap: wrap; }
+        .nav-links a { color: var(--text-muted); text-decoration: none; font-size: .88rem; transition: color .2s; }
+        .nav-links a:hover { color: var(--accent); }
+
+        /* hamburger */
+        .nav-toggle { display: none; background: none; border: none; color: var(--text); font-size: 1.5rem; cursor: pointer; }
+
+        /* ── HERO ── */
+        .hero {
             text-align: center;
-            color: white;
-            padding: 2rem;
+            padding: 5rem 1.5rem 3rem;
+            background: linear-gradient(180deg, #151825 0%, var(--bg) 100%);
         }
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
+        .hero h1 {
+            font-size: clamp(1.8rem, 4vw, 2.8rem);
+            font-weight: 800;
+            letter-spacing: -.02em;
+            margin-bottom: .5rem;
         }
-        p {
-            font-size: 1.2rem;
-            opacity: 0.9;
+        .hero h1 span { color: var(--accent); }
+        .hero .subtitle {
+            color: var(--text-muted); font-size: 1.1rem; max-width: 700px; margin: 0 auto 2rem;
+        }
+        .hero-badges { display: flex; gap: .6rem; justify-content: center; flex-wrap: wrap; }
+        .badge {
+            background: var(--surface2); border: 1px solid var(--border);
+            padding: .3rem .75rem; border-radius: 999px; font-size: .78rem; color: var(--text-muted);
+        }
+
+        /* ── SECTIONS ── */
+        section { max-width: var(--max-w); margin: 0 auto; padding: 3rem 1.5rem; }
+        section + section { border-top: 1px solid var(--border); }
+        .section-title {
+            font-size: 1.6rem; font-weight: 700; margin-bottom: .25rem;
+        }
+        .section-subtitle {
+            color: var(--text-muted); margin-bottom: 2rem; font-size: .95rem;
+        }
+
+        /* ── TOPOLOGY ── */
+        .topology-box {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+            padding: 2rem; overflow-x: auto; margin-bottom: 1.5rem;
+        }
+        .topology-box pre {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: .82rem; color: var(--accent); line-height: 1.5;
+            white-space: pre; margin: 0;
+        }
+
+        /* ── CARDS ── */
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 1.25rem; }
+        .card {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+            padding: 1.5rem; transition: border-color .25s;
+        }
+        .card:hover { border-color: var(--accent-dim); }
+        .card h3 { font-size: 1rem; margin-bottom: .5rem; }
+        .card p, .card li { font-size: .9rem; color: var(--text-muted); }
+        .card ul { padding-left: 1.2rem; }
+
+        /* ── TABLES ── */
+        .table-wrap { overflow-x: auto; margin: 1.25rem 0; }
+        table {
+            width: 100%; border-collapse: collapse; font-size: .88rem;
+            background: var(--surface); border-radius: 8px; overflow: hidden;
+        }
+        thead { background: var(--surface2); }
+        th, td { padding: .65rem 1rem; text-align: left; border-bottom: 1px solid var(--border); }
+        th { font-weight: 600; color: var(--text); font-size: .82rem; text-transform: uppercase; letter-spacing: .04em; }
+        td { color: var(--text-muted); }
+        tr:last-child td { border-bottom: none; }
+        .ok   { color: var(--green); font-weight: 600; }
+        .warn { color: var(--yellow); font-weight: 600; }
+        .bad  { color: var(--red); font-weight: 600; }
+
+        /* ── FIGURES ── */
+        .fig {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+            padding: 1rem; margin: 1.5rem 0; text-align: center;
+        }
+        .fig img { max-width: 100%; height: auto; border-radius: 6px; }
+        .fig figcaption { color: var(--text-muted); font-size: .82rem; margin-top: .5rem; }
+        .fig-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem; margin: 1.5rem 0; }
+        .fig-grid .fig { margin: 0; }
+
+        /* ── CODE BLOCKS ── */
+        .code-block {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+            padding: 1.25rem; margin: 1rem 0; overflow-x: auto;
+        }
+        .code-block pre {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: .82rem; color: var(--text-muted); line-height: 1.6; margin: 0;
+        }
+        .code-block .comment { color: #6b7280; }
+        .code-block .keyword { color: var(--accent); }
+        .code-block .highlight { color: var(--yellow); }
+
+        /* ── STATS ROW ── */
+        .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+        .stat {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+            padding: 1.25rem; text-align: center;
+        }
+        .stat .num { font-size: 1.8rem; font-weight: 800; color: var(--accent); }
+        .stat .label { font-size: .78rem; color: var(--text-muted); margin-top: .25rem; }
+
+        /* ── FINDING BOX ── */
+        .finding {
+            border-left: 3px solid var(--accent);
+            background: var(--surface); padding: 1.25rem 1.5rem; border-radius: 0 8px 8px 0;
+            margin: 1.25rem 0; font-size: .92rem;
+        }
+        .finding.critical { border-left-color: var(--red); }
+        .finding.warning  { border-left-color: var(--yellow); }
+        .finding.success  { border-left-color: var(--green); }
+        .finding strong { color: var(--text); }
+
+        /* ── PACKET STRUCTURE ── */
+        .packet {
+            display: flex; gap: 0; margin: 1.25rem auto; max-width: 650px; font-size: .78rem;
+            font-family: 'JetBrains Mono', monospace; text-align: center;
+        }
+        .packet > div {
+            padding: .6rem .5rem; border: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .packet .label-top { color: var(--text-muted); font-size: .68rem; display: block; margin-bottom: 2px; }
+        .packet .mhdr   { background: #1a2744; flex: 1; }
+        .packet .meta   { background: #1a3328; flex: 2; }
+        .packet .relid  { background: #2a1f1a; flex: 1.5; }
+        .packet .phy    { background: #1c1a2e; flex: 4; }
+        .packet .mic    { background: #2a1a1a; flex: 1; }
+
+        /* ── TIMELINE ── */
+        .timeline { position: relative; padding-left: 2rem; margin: 1.5rem 0; }
+        .timeline::before {
+            content: ''; position: absolute; left: .55rem; top: 0; bottom: 0;
+            width: 2px; background: var(--border);
+        }
+        .timeline-item { position: relative; margin-bottom: 1.5rem; }
+        .timeline-item::before {
+            content: ''; position: absolute; left: -1.45rem; top: .45rem;
+            width: 10px; height: 10px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg);
+        }
+        .timeline-item h4 { font-size: .95rem; margin-bottom: .25rem; }
+        .timeline-item p  { font-size: .88rem; color: var(--text-muted); }
+
+        /* ── FOOTER ── */
+        footer {
+            border-top: 1px solid var(--border);
+            text-align: center; padding: 2rem 1.5rem; color: var(--text-muted);
+            font-size: .82rem;
+        }
+        footer a { color: var(--accent); text-decoration: none; }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 768px) {
+            .nav-links { display: none; flex-direction: column; gap: .5rem; width: 100%; padding-top: .75rem; }
+            .nav-links.open { display: flex; }
+            .nav-toggle { display: block; }
+            .nav-inner { flex-wrap: wrap; }
+            .packet { flex-wrap: wrap; }
+            .stat-row { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>ChirpStack Mesh Analysis</h1>
-        <p>Coming Soon</p>
+
+<!-- NAV -->
+<nav>
+    <div class="nav-inner">
+        <a class="nav-brand" href="#">ChirpStack Mesh Analysis</a>
+        <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Menu">&#9776;</button>
+        <ul class="nav-links">
+            <li><a href="#overview">Overview</a></li>
+            <li><a href="#protocol">Protocol</a></li>
+            <li><a href="#methodology">Methodology</a></li>
+            <li><a href="#experiment1">Exp 1: Traffic</a></li>
+            <li><a href="#experiment2">Exp 2: 4-Node</a></li>
+            <li><a href="#experiment3">Exp 3: Payload</a></li>
+            <li><a href="#timing">Timing</a></li>
+            <li><a href="#findings">Findings</a></li>
+        </ul>
     </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+    <h1><span>ChirpStack Gateway Mesh</span><br>Performance Evaluation &amp; Protocol Analysis</h1>
+    <p class="subtitle">A comprehensive measurement framework and experimental study evaluating the ChirpStack LoRaWAN Gateway Mesh protocol &mdash; covering protocol internals, network performance, payload constraints, duty cycle behaviour, and relay timing analysis.</p>
+    <div class="hero-badges">
+        <span class="badge">LoRaWAN</span>
+        <span class="badge">EU868</span>
+        <span class="badge">ChirpStack v4</span>
+        <span class="badge">Gateway Mesh</span>
+        <span class="badge">Rust Protocol Analysis</span>
+        <span class="badge">Python Measurement Framework</span>
+    </div>
+</header>
+
+<!-- ═══════════════════════════════════════════ OVERVIEW ══ -->
+<section id="overview">
+    <h2 class="section-title">Project Overview</h2>
+    <p class="section-subtitle">Why this research matters and what we built</p>
+
+    <p style="margin-bottom:1.5rem;">
+        LoRaWAN gateway mesh extends network coverage to areas where gateways lack a direct internet connection.
+        A <strong>relay gateway</strong> receives end-device uplinks and forwards them over LoRa to a <strong>border gateway</strong> with internet connectivity.
+        This is critical for rural/remote IoT deployments, disaster recovery, and extending coverage without additional backhaul infrastructure.
+        However, mesh relaying introduces <strong>overhead, latency, duty cycle consumption, and payload constraints</strong> that must be understood before deployment.
+    </p>
+
+    <p style="margin-bottom:1.5rem;">
+        Since the official documentation does not explicitly detail the implemented protocol, we conducted a <strong>deep-dive into the Rust source code</strong> (<code>mesh.rs</code>) and built a <strong>full measurement and analysis framework</strong> to experimentally evaluate real-world performance.
+    </p>
+
+    <!-- Topology -->
+    <div class="topology-box">
+<pre>
+┌──────────────┐    LoRa     ┌──────────────┐   Mesh Backhaul   ┌──────────────┐
+│  End Device  │ ──────────► │    Relay     │ ────────────────► │    Border    │
+│  (Sensors)   │             │   Gateway    │   (MType=7/Prop)  │   Gateway    │
+└──────────────┘             └──────────────┘                   └──────────────┘
+                                                                       │
+                                   Uplink path:                        │ Internet
+                                   End Device → Relay GW → Border GW   ▼
+                                   → ChirpStack NS                ┌─────────────────┐
+                                                                  │   ChirpStack    │
+                                   Downlink path:                 │ Network Server  │
+                                   NS → Border GW → Relay GW     └─────────────────┘
+                                   → End Device
+</pre>
+    </div>
+
+    <!-- Hardware -->
+    <h3 style="margin-bottom:1rem;">Hardware &amp; Setup</h3>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Component</th><th>Model</th><th>Role</th></tr></thead>
+            <tbody>
+                <tr><td>Border Gateway</td><td>Raspberry Pi + RAK Concentrator</td><td>Internet-connected gateway</td></tr>
+                <tr><td>Relay Gateway</td><td>Raspberry Pi + RAK Concentrator</td><td>Mesh relay (no internet)</td></tr>
+                <tr><td>End Device 1</td><td>Arduino Nano BLE 33 + Wio-E5</td><td>LoRaWAN sensor node</td></tr>
+                <tr><td>End Device 2</td><td>Nicla Vision + Wio-E5</td><td>LoRaWAN sensor node</td></tr>
+                <tr><td>End Device 3</td><td>ESP32-S2 QT Py + Wio-E5</td><td>LoRaWAN sensor node</td></tr>
+                <tr><td>End Device 4</td><td>RAK4630</td><td>LoRaWAN sensor node (native stack)</td></tr>
+                <tr><td>Network Server</td><td>ChirpStack v4</td><td>LoRaWAN NS (MQTT + gRPC)</td></tr>
+                <tr><td>Region</td><td>EU868</td><td>868 MHz ISM band, 1% duty cycle</td></tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ PROTOCOL ══ -->
+<section id="protocol">
+    <h2 class="section-title">Protocol Deep-Dive</h2>
+    <p class="section-subtitle">Reverse-engineered from the ChirpStack Gateway Mesh Rust codebase (<code>mesh.rs</code>)</p>
+
+    <!-- Packet Structure -->
+    <h3 style="margin-bottom:.75rem;">Mesh Packet Structure — 14-Byte Overhead</h3>
+    <div class="packet">
+        <div class="mhdr"><span class="label-top">MHDR</span>1 B</div>
+        <div class="meta"><span class="label-top">Metadata</span>5 B</div>
+        <div class="relid"><span class="label-top">Relay ID</span>4 B</div>
+        <div class="phy"><span class="label-top">PHY Payload</span>variable</div>
+        <div class="mic"><span class="label-top">MIC</span>4 B</div>
+    </div>
+
+    <div class="card-grid" style="margin-top:1.5rem;">
+        <div class="card">
+            <h3>MHDR (1 byte)</h3>
+            <ul>
+                <li>MType = 7 (Proprietary)</li>
+                <li>PayloadType: 2 bits</li>
+                <li>HopCount: 3 bits</li>
+            </ul>
+        </div>
+        <div class="card">
+            <h3>Metadata (5 bytes) — Bit-packed</h3>
+            <ul>
+                <li>Uplink ID: 12 bits (0–4095)</li>
+                <li>Data Rate: 4 bits (0–15)</li>
+                <li>RSSI: 8 bits (positive, convert to negative)</li>
+                <li>SNR: 6 bits (two's complement)</li>
+                <li>Channel: 8 bits</li>
+            </ul>
+        </div>
+        <div class="card">
+            <h3>Security &amp; Integrity</h3>
+            <ul>
+                <li>MIC-based integrity verification</li>
+                <li>Optional encryption for events/commands</li>
+                <li>Shared signing keys across mesh</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Protocol Characteristics -->
+    <h3 style="margin:2rem 0 .75rem;">Protocol Characteristics</h3>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Feature</th><th>Implementation</th></tr></thead>
+            <tbody>
+                <tr><td>Routing</td><td>Flooding (no routing tables)</td></tr>
+                <tr><td>Deduplication</td><td>LRU cache (64 entries per gateway)</td></tr>
+                <tr><td>Acknowledgement</td><td>None at mesh layer</td></tr>
+                <tr><td>Max Hops</td><td>Configurable (typically 3–5)</td></tr>
+                <tr><td>Frequency Selection</td><td>Round-robin across configured mesh channels</td></tr>
+                <tr><td>Timing</td><td>Immediate transmission (no backoff)</td></tr>
+                <tr><td>Collision Avoidance</td><td>None</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Global State -->
+    <h3 style="margin:2rem 0 .75rem;">Global State Variables</h3>
+    <div class="code-block">
+<pre><span class="keyword">static</span> CTX_PREFIX: [u8; 3] = [1, 2, 3];            <span class="comment">// Magic bytes for mesh context identification</span>
+<span class="keyword">static</span> MESH_CHANNEL: Mutex&lt;usize&gt; = Mutex::new(0);  <span class="comment">// Round-robin channel counter</span>
+<span class="keyword">static</span> UPLINK_ID: Mutex&lt;u16&gt; = Mutex::new(0);       <span class="comment">// Correlation counter (0–4095, wraps)</span>
+<span class="keyword">static</span> UPLINK_CONTEXT: LazyLock&lt;Mutex&lt;HashMap&lt;u16, Vec&lt;u8&gt;&gt;&gt;&gt;; <span class="comment">// Timing storage for downlink routing</span>
+<span class="keyword">static</span> PAYLOAD_CACHE: LazyLock&lt;Mutex&lt;Cache&lt;PayloadCache&gt;&gt;&gt;;    <span class="comment">// LRU deduplication cache (64 entries)</span></pre>
+    </div>
+
+    <!-- Context-Based Downlink Routing -->
+    <h3 style="margin:2rem 0 .75rem;">Context-Based Downlink Routing</h3>
+    <div class="code-block">
+<pre><span class="comment">// The border gateway embeds this context when forwarding uplinks to the NS</span>
+<span class="comment">// When NS sends a downlink, the border detects the prefix and routes through mesh</span>
+
+Context = [<span class="highlight">1, 2, 3</span>] + [<span class="highlight">relay_id (4B)</span>] + [<span class="highlight">uplink_id (2B)</span>]
+           prefix       target relay      correlation ID</pre>
+    </div>
+
+    <!-- Uplink Flow -->
+    <h3 style="margin:2rem 0 .75rem;">Uplink Flow</h3>
+    <div class="timeline">
+        <div class="timeline-item">
+            <h4>1. End Device transmits uplink (SF7/SF12)</h4>
+            <p>Standard LoRaWAN uplink with MType 2 (unconfirmed) or 4 (confirmed)</p>
+        </div>
+        <div class="timeline-item">
+            <h4>2. Relay Gateway receives &amp; encapsulates</h4>
+            <p><code>relay_uplink_lora_packet()</code> wraps the original PHY payload in a mesh frame (+14 bytes), stores original DR, and transmits using mesh SF with round-robin frequency</p>
+        </div>
+        <div class="timeline-item">
+            <h4>3. Border Gateway decapsulates</h4>
+            <p><code>proxy_uplink_mesh_packet()</code> extracts original payload, restores original DR metadata, and forwards to Network Server via ZMQ</p>
+        </div>
+        <div class="timeline-item">
+            <h4>4. Network Server processes</h4>
+            <p>ChirpStack deduplicates, validates, and delivers to application — unaware of mesh hop</p>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ METHODOLOGY ══ -->
+<section id="methodology">
+    <h2 class="section-title">Measurement Methodology</h2>
+    <p class="section-subtitle">Full-stack measurement and analysis pipeline</p>
+
+    <div class="card-grid">
+        <div class="card">
+            <h3>MQTT Logger</h3>
+            <p>Dual-broker subscriber capturing all gateway and NS events. Decodes Protobuf gateway events and JSON application events. Stores as timestamped JSONL.</p>
+        </div>
+        <div class="card">
+            <h3>PHY-Level Packet Parser</h3>
+            <p>Extracts LoRaWAN headers from raw PHY payloads: MType classification, DevAddr and FCnt extraction for cross-layer matching.</p>
+        </div>
+        <div class="card">
+            <h3>Cross-Layer Matching</h3>
+            <p>Uses <code>(dev_addr, fcnt)</code> as unique identifier to track each packet across relay → border → NS.</p>
+        </div>
+        <div class="card">
+            <h3>Ground Truth Table</h3>
+            <p>Unified per-packet view: seen at relay? border? NS? hop delay, path type (direct / relayed / both).</p>
+        </div>
+        <div class="card">
+            <h3>Automated Experiment Runner</h3>
+            <p>Orchestrates end-to-end experiments with configurable PPM, SF, payload, duration. Supports manual mode for reliability.</p>
+        </div>
+        <div class="card">
+            <h3>Duty Cycle Monitor</h3>
+            <p>Real-time tracking of M-band duty cycle consumption from gateway statistics events.</p>
+        </div>
+    </div>
+
+    <!-- Frame Classification -->
+    <h3 style="margin:2rem 0 .75rem;">Frame Classification</h3>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>MType</th><th>Binary</th><th>Meaning</th><th>In Mesh Setup</th></tr></thead>
+            <tbody>
+                <tr><td>2</td><td><code>010</code></td><td>Unconfirmed Data Up</td><td>Original device uplink</td></tr>
+                <tr><td>4</td><td><code>100</code></td><td>Confirmed Data Up</td><td>Original device uplink (ACK requested)</td></tr>
+                <tr><td>7</td><td><code>111</code></td><td>Proprietary</td><td><strong>Mesh backhaul frame</strong></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Metrics -->
+    <h3 style="margin:2rem 0 .75rem;">Metrics Computed</h3>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Metric</th><th>Formula / Description</th></tr></thead>
+            <tbody>
+                <tr><td><strong>PDR</strong></td><td><code>packets_received_at_NS / packets_expected × 100%</code></td></tr>
+                <tr><td><strong>Mesh Forwarding Success</strong></td><td><code>packets_at_border_relayed / packets_at_relay × 100%</code></td></tr>
+                <tr><td><strong>Mesh Hop Delay</strong></td><td><code>timestamp_border − timestamp_relay</code> (ms)</td></tr>
+                <tr><td><strong>Mesh Overhead</strong></td><td><code>mesh_phy_size − original_phy_size</code> (typically 14 B)</td></tr>
+                <tr><td><strong>Duty Cycle Utilisation</strong></td><td><code>Δload_tracked / 36s × 100%</code> (36s = 1% of 3600s/hour)</td></tr>
+                <tr><td><strong>Relay Usage Distribution</strong></td><td>% packets relayed / direct / both</td></tr>
+                <tr><td><strong>Goodput</strong></td><td><code>(app_payload_bytes × 8) / session_duration</code></td></tr>
+                <tr><td><strong>Downlink Success Rate</strong></td><td>DL commands vs TX acks received</td></tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ EXPERIMENT 1 ══ -->
+<section id="experiment1">
+    <h2 class="section-title">Experiment 1: Network Performance vs Traffic Load</h2>
+    <p class="section-subtitle">4 SF/Mesh configurations tested across 9 traffic levels (4–48 packets/min)</p>
+
+    <div class="stat-row">
+        <div class="stat"><div class="num">4</div><div class="label">End Devices</div></div>
+        <div class="stat"><div class="num">32</div><div class="label">Sessions Run</div></div>
+        <div class="stat"><div class="num">5 min</div><div class="label">Per Session</div></div>
+        <div class="stat"><div class="num">EU868</div><div class="label">Region</div></div>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Configuration</th><th>End Node SF</th><th>Mesh SF</th><th>DC Range</th><th>PDR Range</th><th>Verdict</th></tr></thead>
+            <tbody>
+                <tr><td>Config 1</td><td>SF7</td><td>SF7</td><td>8.8% – 40.1%</td><td>58% – 100%</td><td class="ok">Best overall</td></tr>
+                <tr><td>Config 2</td><td>SF7</td><td>SF10</td><td>24.7% – 238.6%</td><td>49% – 100%</td><td class="bad">DC violations at 24+ ppm</td></tr>
+                <tr><td>Config 3</td><td>SF12</td><td>SF7</td><td>4.9% – 23.2%</td><td>60% – 99%</td><td class="warn">Lower DC but variable PDR</td></tr>
+                <tr><td>Config 4</td><td>SF12</td><td>SF10</td><td>20.0% – 128.1%</td><td>50% – 75%</td><td class="bad">DC violations + lowest PDR</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="finding success">
+        <strong>Key Takeaway:</strong> Using higher spreading factors for mesh backhaul dramatically increases duty cycle consumption. SF10 mesh backhaul causes <strong>duty cycle violations</strong> at moderate traffic loads (24+ ppm). <strong>SF7 mesh backhaul is strongly recommended.</strong>
+    </div>
+
+    <div class="fig-grid">
+        <figure class="fig">
+            <img src="images/4node_ppm_vs_performance.png" alt="SF7 Nodes + SF7 Mesh performance" loading="lazy">
+            <figcaption>SF7 End Nodes + SF7 Mesh Backhaul</figcaption>
+        </figure>
+        <figure class="fig">
+            <img src="images/4node_sf10_ppm_vs_performance.png" alt="SF7 Nodes + SF10 Mesh performance" loading="lazy">
+            <figcaption>SF7 End Nodes + SF10 Mesh Backhaul</figcaption>
+        </figure>
+        <figure class="fig">
+            <img src="images/sf12_nodes_sf7_mesh_performance.png" alt="SF12 Nodes + SF7 Mesh performance" loading="lazy">
+            <figcaption>SF12 End Nodes + SF7 Mesh Backhaul</figcaption>
+        </figure>
+        <figure class="fig">
+            <img src="images/sf12_nodes_sf10_mesh_performance.png" alt="SF12 Nodes + SF10 Mesh performance" loading="lazy">
+            <figcaption>SF12 End Nodes + SF10 Mesh Backhaul</figcaption>
+        </figure>
+    </div>
+
+    <figure class="fig">
+        <img src="images/comprehensive_comparison_all_configs.png" alt="All configurations comparison" loading="lazy">
+        <figcaption>Comprehensive Comparison — Duty Cycle &amp; PDR across all 4 configurations</figcaption>
+    </figure>
+</section>
+
+<!-- ═══════════════════════════════════════════ EXPERIMENT 2 ══ -->
+<section id="experiment2">
+    <h2 class="section-title">Experiment 2: 4-Node Uplink, Downlink &amp; Duty Cycle</h2>
+    <p class="section-subtitle">SF7 end devices with SF7 / SF9 / SF12 mesh backhaul — 2 to 15 PPM per node</p>
+
+    <div class="stat-row">
+        <div class="stat"><div class="num">4</div><div class="label">SF7 End Devices</div></div>
+        <div class="stat"><div class="num">3</div><div class="label">Mesh SF Configs</div></div>
+        <div class="stat"><div class="num">25</div><div class="label">Sessions Run</div></div>
+        <div class="stat"><div class="num">300s</div><div class="label">Per Session</div></div>
+    </div>
+
+    <h3 style="margin:1.5rem 0 .75rem;">Relay Gateway PDR vs Packet Rate</h3>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>PPM</th><th>SF7 Mesh</th><th>SF9 Mesh</th><th>SF12 Mesh</th></tr></thead>
+            <tbody>
+                <tr><td>2</td><td class="ok">100.0%</td><td>97.5%</td><td class="ok">100.0%</td></tr>
+                <tr><td>4</td><td>93.8%</td><td class="ok">100.0%</td><td>57.5%</td></tr>
+                <tr><td>6</td><td>83.3%</td><td>86.7%</td><td>55.0%</td></tr>
+                <tr><td>8</td><td>75.6%</td><td>63.7%</td><td>51.2%</td></tr>
+                <tr><td>10</td><td>77.0%</td><td>74.5%</td><td class="bad">30.5%</td></tr>
+                <tr><td>12</td><td>66.2%</td><td>65.0%</td><td class="bad">31.7%</td></tr>
+                <tr><td>15</td><td>60.3%</td><td>63.7%</td><td class="bad">30.3%</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <figure class="fig">
+        <img src="images/combined_relay_pdr.png" alt="Combined relay PDR comparison" loading="lazy">
+        <figcaption>Relay Gateway PDR — SF7 vs SF9 vs SF12 mesh backhaul</figcaption>
+    </figure>
+
+    <h3 style="margin:1.5rem 0 .75rem;">Border Gateway PDR vs Packet Rate</h3>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>PPM</th><th>SF7 Mesh</th><th>SF9 Mesh</th><th>SF12 Mesh</th></tr></thead>
+            <tbody>
+                <tr><td>2</td><td>97.5%</td><td class="ok">100.0%</td><td>95.0%</td></tr>
+                <tr><td>4</td><td>91.2%</td><td>98.8%</td><td class="bad">38.8%</td></tr>
+                <tr><td>6</td><td>82.5%</td><td>70.8%</td><td class="bad">25.8%</td></tr>
+                <tr><td>8</td><td>65.0%</td><td>55.6%</td><td class="bad">25.6%</td></tr>
+                <tr><td>10</td><td>71.0%</td><td>69.5%</td><td class="bad">24.0%</td></tr>
+                <tr><td>12</td><td>51.2%</td><td>53.3%</td><td class="bad">22.9%</td></tr>
+                <tr><td>15</td><td>53.0%</td><td>47.3%</td><td class="bad">14.0%</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <figure class="fig">
+        <img src="images/combined_border_pdr.png" alt="Combined border PDR comparison" loading="lazy">
+        <figcaption>Border Gateway PDR — SF7 vs SF9 vs SF12 mesh backhaul</figcaption>
+    </figure>
+
+    <h3 style="margin:1.5rem 0 .75rem;">M-band Duty Cycle Budget Utilisation</h3>
+    <p style="margin-bottom:1rem;color:var(--text-muted);font-size:.9rem;">EU868 M-band: 1% duty cycle = 36 seconds of airtime per hour. Values &gt;100% violate regulations.</p>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>PPM</th><th>SF7 Mesh</th><th>SF9 Mesh</th><th>SF12 Mesh</th></tr></thead>
+            <tbody>
+                <tr><td>2</td><td class="ok">20.6%</td><td class="ok">31.0%</td><td class="bad">252.1%</td></tr>
+                <tr><td>4</td><td class="ok">36.6%</td><td class="warn">67.6%</td><td class="bad">262.7%</td></tr>
+                <tr><td>6</td><td class="warn">59.1%</td><td class="warn">90.6%</td><td class="bad">371.1%</td></tr>
+                <tr><td>8</td><td class="warn">70.9%</td><td class="warn">83.8%</td><td class="bad">454.4%</td></tr>
+                <tr><td>10</td><td class="warn">74.8%</td><td class="bad">125.7%</td><td class="bad">314.3%</td></tr>
+                <tr><td>12</td><td class="warn">57.8%</td><td class="bad">108.1%</td><td class="bad">421.7%</td></tr>
+                <tr><td>15</td><td class="warn">82.8%</td><td class="bad">156.3%</td><td class="bad">522.2%</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <figure class="fig">
+        <img src="images/combined_duty_cycle.png" alt="Combined duty cycle comparison" loading="lazy">
+        <figcaption>M-band Duty Cycle Utilisation — SF7 stays within limits; SF12 exceeds 500%</figcaption>
+    </figure>
+
+    <h3 style="margin:1.5rem 0 .75rem;">Downlink Delivery Success Rate</h3>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>PPM</th><th>SF7 Mesh</th><th>SF9 Mesh</th><th>SF12 Mesh</th></tr></thead>
+            <tbody>
+                <tr><td>2</td><td class="ok">100.0%</td><td class="ok">100.0%</td><td class="ok">100.0%</td></tr>
+                <tr><td>4</td><td>93.8%</td><td class="ok">100.0%</td><td class="warn">45.0%</td></tr>
+                <tr><td>6</td><td>88.3%</td><td>85.8%</td><td class="bad">29.2%</td></tr>
+                <tr><td>8</td><td>74.4%</td><td>63.1%</td><td class="bad">28.1%</td></tr>
+                <tr><td>10</td><td>83.0%</td><td>80.0%</td><td class="bad">25.5%</td></tr>
+                <tr><td>12</td><td>57.1%</td><td>55.4%</td><td class="bad">26.2%</td></tr>
+                <tr><td>15</td><td>55.7%</td><td>47.0%</td><td class="bad">15.3%</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <figure class="fig">
+        <img src="images/combined_downlink_delivery.png" alt="Combined downlink delivery comparison" loading="lazy">
+        <figcaption>Downlink Delivery Rate — degrades with load, SF12 drops below 30%</figcaption>
+    </figure>
+
+    <div class="finding">
+        <strong>Summary:</strong> SF7 mesh stays within EU868 duty cycle limits at all tested rates (max 82.8%).
+        SF9 exceeds 100% at 10+ PPM. SF12 exceeds limits even at 2 PPM (252%) and is not practical for multi-node deployments.
+        Duty cycle is the primary performance limiter — when it exceeds ~60%, significant packet loss begins.
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ EXPERIMENT 3 ══ -->
+<section id="experiment3">
+    <h2 class="section-title">Experiment 3: Payload Size vs PDR</h2>
+    <p class="section-subtitle">3 end devices at SF12, relay forwarding at SF7, 40 packets per device, confirmed uplinks</p>
+
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Payload Size</th><th>PDR</th><th>Relay DC Used</th><th>Observation</th></tr></thead>
+            <tbody>
+                <tr><td>10 bytes</td><td class="ok">98.3%</td><td>33.8%</td><td>Excellent</td></tr>
+                <tr><td>15 bytes</td><td class="ok">94.2%</td><td>38.7%</td><td>Good</td></tr>
+                <tr><td>20 bytes</td><td class="ok">99.1%</td><td>39.1%</td><td>Excellent</td></tr>
+                <tr><td>25 bytes</td><td class="warn">83.9%</td><td>28.1%</td><td>Degradation begins</td></tr>
+                <tr><td>30 bytes</td><td class="bad">36.2%</td><td>62.1%</td><td>Severe degradation</td></tr>
+                <tr><td>35 bytes</td><td class="bad">~16.7%</td><td>—</td><td>Critical failure</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <figure class="fig">
+        <img src="images/1_pdr_vs_payload.png" alt="PDR vs payload size" loading="lazy">
+        <figcaption>PDR vs Payload Size — sharp drop above 25 bytes at SF12</figcaption>
+    </figure>
+
+    <div class="finding warning">
+        <strong>Root Cause:</strong> PDR degradation is driven by <strong>airtime-related MAC and channel effects</strong>, not duty cycle enforcement.
+        Longer packets at SF12 occupy the radio for extended TX + RX1 + RX2 windows. The radio rejects new packets as "modem busy" during this period.
+    </div>
+
+    <!-- Validation Gap -->
+    <h3 style="margin:2rem 0 .75rem;">Discovered: Payload Validation Gap</h3>
+
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Mesh Backhaul SF</th><th>Max PHY Payload</th><th>Available After Mesh OH</th></tr></thead>
+            <tbody>
+                <tr><td>SF7</td><td>222 bytes</td><td>208 bytes</td></tr>
+                <tr><td>SF9</td><td>115 bytes</td><td>101 bytes</td></tr>
+                <tr><td>SF12</td><td>51 bytes</td><td>37 bytes</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="finding critical">
+        <strong>Bug Found:</strong> No payload size validation exists against the mesh SF's capacity.
+        <br><br>
+        <strong>How it happens:</strong><br>
+        1. End device sends at SF7 with 200-byte payload (valid for SF7)<br>
+        2. Relay wraps in mesh packet (+14 bytes = 214 bytes)<br>
+        3. Relay transmits using mesh SF12 (max 51 bytes!) — <strong>exceeds PHY limit</strong><br>
+        4. Border gateway restores original SF7 metadata<br>
+        5. Network Server accepts it because it sees SF7, not SF12<br><br>
+        <strong>Root cause:</strong> <code>relay_uplink_lora_packet()</code> stores original DR but transmits with mesh SF. <code>proxy_uplink_mesh_packet()</code> restores original DR before forwarding. No size check anywhere.
+    </div>
+
+    <figure class="fig">
+        <img src="images/mesh_sf_payload_analysis.png" alt="Mesh SF payload analysis" loading="lazy">
+        <figcaption>Payload delivery analysis across Mesh backhaul spreading factors</figcaption>
+    </figure>
+</section>
+
+<!-- ═══════════════════════════════════════════ TIMING ══ -->
+<section id="timing">
+    <h2 class="section-title">Relay Timing Analysis</h2>
+    <p class="section-subtitle">Mesh hop delay between relay and border gateway receptions (46 matched packets)</p>
+
+    <div class="stat-row">
+        <div class="stat"><div class="num">1352 ms</div><div class="label">Mean Hop Delay</div></div>
+        <div class="stat"><div class="num">464 ms</div><div class="label">Median Hop Delay</div></div>
+        <div class="stat"><div class="num">18 ms</div><div class="label">Minimum Delay</div></div>
+        <div class="stat"><div class="num">9011 ms</div><div class="label">Maximum Delay</div></div>
+    </div>
+
+    <div class="finding warning">
+        <strong>High variance (σ = 2066 ms)</strong> suggests occasional queuing or retransmission effects at the relay.
+        The maximum delay of 9 seconds raises concerns for <strong>Class A downlink windows</strong> (RX1 typically at 1s, RX2 at 2s).
+    </div>
+
+    <div class="fig-grid">
+        <figure class="fig">
+            <img src="images/timing_difference_histogram.png" alt="Hop delay histogram" loading="lazy">
+            <figcaption>Hop Delay Distribution</figcaption>
+        </figure>
+        <figure class="fig">
+            <img src="images/timing_difference_boxplot.png" alt="Hop delay boxplot" loading="lazy">
+            <figcaption>Hop Delay Box Plot</figcaption>
+        </figure>
+        <figure class="fig">
+            <img src="images/timing_difference_timeseries.png" alt="Hop delay timeseries" loading="lazy">
+            <figcaption>Hop Delay Over Time</figcaption>
+        </figure>
+        <figure class="fig">
+            <img src="images/timing_difference_cdf.png" alt="Hop delay CDF" loading="lazy">
+            <figcaption>Cumulative Distribution Function</figcaption>
+        </figure>
+    </div>
+
+    <figure class="fig">
+        <img src="images/timing_vs_rssi.png" alt="Timing vs RSSI" loading="lazy">
+        <figcaption>Hop Delay vs RSSI — exploring correlation between signal strength and delay</figcaption>
+    </figure>
+</section>
+
+<!-- ═══════════════════════════════════════════ FINDINGS ══ -->
+<section id="findings">
+    <h2 class="section-title">Critical Findings &amp; Conclusions</h2>
+    <p class="section-subtitle">Summary of all issues identified and recommendations</p>
+
+    <h3 style="margin-bottom:1rem; color:var(--green);">What Works Well</h3>
+    <div class="card-grid" style="margin-bottom:2rem;">
+        <div class="card">
+            <h3>Simple &amp; Elegant Protocol</h3>
+            <p>Suitable for sparse rural deployments. Minimal state management with only 5 global variables.</p>
+        </div>
+        <div class="card">
+            <h3>Effective Metadata Compression</h3>
+            <p>5 bytes for all uplink metadata via bit-level packing (uplink_id, DR, RSSI, SNR, channel).</p>
+        </div>
+        <div class="card">
+            <h3>Clever Downlink Routing</h3>
+            <p>Context-based routing efficiently directs downlinks through mesh to the correct relay without routing tables.</p>
+        </div>
+        <div class="card">
+            <h3>SF7 Mesh Performs Well</h3>
+            <p>Achieves up to 100% PDR at low-to-moderate traffic with duty cycle staying within EU868 limits.</p>
+        </div>
+    </div>
+
+    <h3 style="margin-bottom:1rem; color:var(--red);">Issues Identified</h3>
+    <div class="finding critical">
+        <strong>1. No Payload Size Validation</strong> — Packets can silently violate PHY limits when mesh SF has lower capacity than the device SF.
+    </div>
+    <div class="finding critical">
+        <strong>2. Duty Cycle Tracked but Not Enforced</strong> — Gateway software tracks duty cycle but continues transmitting when it exceeds 100%, violating EU868 regulations.
+    </div>
+    <div class="finding critical">
+        <strong>3. No Collision Avoidance</strong> — Multiple relays hearing the same packet retransmit immediately, potentially on the same frequency.
+    </div>
+    <div class="finding warning">
+        <strong>4. 64-Entry LRU Cache</strong> — May be insufficient for busy networks; old packets could loop back into the network.
+    </div>
+    <div class="finding warning">
+        <strong>5. No Mesh-Layer ACKs</strong> — Packet loss on the mesh backhaul is completely silent. No notification or retry mechanism exists.
+    </div>
+    <div class="finding warning">
+        <strong>6. UPLINK_CONTEXT Memory Leak Risk</strong> — The HashMap has no cleanup mechanism and relies on ID wrap-around at 4096 entries.
+    </div>
+    <div class="finding warning">
+        <strong>7. High Hop Delay Variance</strong> — 18 ms to 9 seconds raises reliability concerns for Class A downlink windows within RX budget.
+    </div>
+
+    <h3 style="margin:2rem 0 1rem;">Key Takeaways</h3>
+    <div class="card-grid">
+        <div class="card">
+            <h3>1. Flooding Protocol</h3>
+            <p>No routing tables — suitable for sparse networks but not scalable beyond ~10 gateways.</p>
+        </div>
+        <div class="card">
+            <h3>2. 14-Byte Overhead</h3>
+            <p>Constrains max payload especially at higher SFs. Critical limitation for SF12 deployments.</p>
+        </div>
+        <div class="card">
+            <h3>3. SF7 Mesh is Optimal</h3>
+            <p>SF10/SF12 cause duty cycle violations at moderate traffic. Always use SF7 for mesh backhaul.</p>
+        </div>
+        <div class="card">
+            <h3>4. Payload PDR Cliff</h3>
+            <p>98% at 10B → 36% at 30B at SF12. Driven by airtime and MAC-layer blocking, not DC enforcement.</p>
+        </div>
+        <div class="card">
+            <h3>5. Regulatory Risk</h3>
+            <p>Duty cycle tracking without enforcement is a potential compliance issue in EU868 deployments.</p>
+        </div>
+        <div class="card">
+            <h3>6. Right-Sized Use Case</h3>
+            <p>Despite limitations, works well for intended use: sparse, rural LoRaWAN coverage extension with low-to-moderate traffic.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ ADDITIONAL GRAPHS ══ -->
+<section id="more-graphs">
+    <h2 class="section-title">Additional Visualisations</h2>
+    <p class="section-subtitle">Duty cycle and transmission ratio analysis</p>
+
+    <div class="fig-grid">
+        <figure class="fig">
+            <img src="images/duty_cycle_poster.png" alt="Duty cycle poster" loading="lazy">
+            <figcaption>Duty Cycle Analysis</figcaption>
+        </figure>
+        <figure class="fig">
+            <img src="images/sf7_duty_cycle_poster.png" alt="SF7 duty cycle" loading="lazy">
+            <figcaption>SF7 Duty Cycle Analysis</figcaption>
+        </figure>
+        <figure class="fig">
+            <img src="images/relay_pdr_poster.png" alt="Relay PDR poster" loading="lazy">
+            <figcaption>Relay PDR Analysis</figcaption>
+        </figure>
+        <figure class="fig">
+            <img src="images/transmission_ratios_2x2.png" alt="Transmission ratios" loading="lazy">
+            <figcaption>Transmission Ratios (2×2 Comparison)</figcaption>
+        </figure>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ FOOTER ══ -->
+<footer>
+    <p>
+        ChirpStack Gateway Mesh — Performance Evaluation &amp; Protocol Analysis<br>
+        <a href="https://github.com/ChirpStack-Mesh-Analysis" target="_blank">GitHub</a> &middot;
+        Built with ChirpStack v4, Python, LoRaWAN EU868
+    </p>
+</footer>
+
 </body>
 </html>
